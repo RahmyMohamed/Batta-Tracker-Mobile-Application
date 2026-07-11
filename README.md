@@ -1,5 +1,6 @@
 # Batta Tracker
-![preview img](Image 2.jpeg) ![preview img](Image 1.jpeg)
+![preview img](Image 2.jpeg) 
+![preview img](Image 1.jpeg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/)
 
