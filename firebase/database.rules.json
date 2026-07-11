@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "live_locations": {
+      "$vehicleId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (
+          !data.exists() ||
+          data.child('driverId').val() === auth.uid
+        )"
+      }
+    },
+    "active_trips": {
+      "$tripId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}

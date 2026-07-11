@@ -1,0 +1,57 @@
+name: batta_tracker
+description: GPS-Based Real-Time Batta Lorry Tracking for Kalpitiya–Kandalkuliya Route
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  cloud_firestore: ^5.6.0
+  firebase_database: ^11.2.0
+  firebase_messaging: ^15.1.6
+  firebase_storage: ^12.3.7
+
+  # Maps & Location
+  google_maps_flutter: ^2.10.0
+  geolocator: ^13.0.2
+  geocoding: ^5.0.0
+
+  # State Management
+  provider: ^6.1.2
+
+  # UI
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.16
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+
+  # Utils
+  intl: ^0.20.2
+  shared_preferences: ^2.3.4
+  connectivity_plus: ^6.1.1
+  url_launcher: ^6.3.1
+  flutter_local_notifications: ^18.0.1
+  permission_handler: ^11.3.1
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
+    - assets/icons/

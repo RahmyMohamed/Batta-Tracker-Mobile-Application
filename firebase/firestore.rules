@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDriver() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver';
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+    }
+
+    match /drivers/{driverId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(driverId);
+    }
+
+    match /vehicles/{vehicleId} {
+      allow read: if isAuthenticated();
+      allow update: if isDriver() &&
+        resource.data.driverId == request.auth.uid;
+      allow create, delete: if false; // Admin only via Firebase Console
+    }
+
+    match /routes/{routeId} {
+      allow read: if isAuthenticated();
+      match /stops/{stopId} {
+        allow read: if isAuthenticated();
+        allow write: if false; // Admin only
+      }
+    }
+
+    match /trips/{tripId} {
+      allow read: if isAuthenticated();
+      allow create: if isDriver();
+      allow update: if isDriver() &&
+        resource.data.driverId == request.auth.uid;
+    }
+
+    match /ratings/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+    }
+
+    match /schedules/{scheduleId} {
+      allow read: if isAuthenticated();
+    }
+  }
+}
