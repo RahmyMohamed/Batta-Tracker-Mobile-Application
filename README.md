@@ -1,5 +1,9 @@
 # Batta Tracker
 
+![preview img](image2.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/)
+
 GPS-Based Real-Time Batta Lorry Tracking Mobile Application for the **Kalpitiya–Kandalkuliya** route, Sri Lanka.
 
 Built with **Flutter** + **Firebase** + **Google Maps**.
