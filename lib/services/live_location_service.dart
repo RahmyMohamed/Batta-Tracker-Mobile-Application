@@ -40,9 +40,9 @@ class LiveLocationService {
 
   /// Stream all active vehicle locations.
   Stream<Map<String, LiveLocationModel>> watchAllLocations() {
-    return _liveLocationsRef.onValue.map((event) {
+    return _liveLocationsRef.onValue.map<Map<String, LiveLocationModel>>((event) {
       final data = event.snapshot.value;
-      if (data == null || data is! Map) return {};
+      if (data == null || data is! Map) return <String, LiveLocationModel>{};
 
       return Map<String, LiveLocationModel>.fromEntries(
         data.entries.map((e) {
