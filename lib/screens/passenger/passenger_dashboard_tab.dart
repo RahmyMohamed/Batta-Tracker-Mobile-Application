@@ -1,207 +1,288 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // <-- Firebase Auth import
+import '../../theme/app_theme.dart';
+import '../../widgets/stat_card.dart';
+import '../../widgets/glass_card.dart';
 
-import '../../core/constants/route_data.dart';
-import '../../models/stop_model.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/locale_provider.dart';
-import '../../providers/tracking_provider.dart';
-import '../../widgets/eta_card.dart';
-import '../../widgets/offline_banner.dart';
-
-class PassengerDashboardTab extends StatelessWidget {
-  const PassengerDashboardTab({super.key});
+class PassengerDashboardTab extends StatefulWidget {
+  const PassengerDashboardTab({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final tracking = context.watch<TrackingProvider>();
-    final auth = context.watch<AuthProvider>();
-    final locale = context.watch<LocaleProvider>().locale.languageCode;
+  State<PassengerDashboardTab> createState() => _PassengerDashboardTabState();
+}
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        await tracking.initializePassenger(
-          selectedStopId: auth.user?.selectedStopId,
-        );
-      },
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (!tracking.isOnline) const OfflineBanner(),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Route',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+class _PassengerDashboardTabState extends State<PassengerDashboardTab> {
+  String? _selectedStop;
+  String _passengerName = "Passenger"; // Default fallback name
+  String _passengerEmail = "No Email Provided"; // Dynamic Email Fallback
+
+  // Mock data for dropdown
+  final List<String> _stops = ['Kalpitiya Town', 'Kandakuliya Junction', 'Kudawa Beach'];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLoggedInUserName(); // Fetch user name when the screen loads
+  }
+
+  // Function to fetch current user details from Firebase Auth
+  void _fetchLoggedInUserName() {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _passengerName = user.displayName ?? user.email?.split('@')[0] ?? "Passenger";
+        _passengerEmail = user.email ?? "No Email Provided";
+      });
+    }
+  }
+
+  // Modern Glassmorphic User Details Bottom Sheet UI Panel
+  void _showUserProfileBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent, // Transparent background handles the glass effect cleanly
+      barrierColor: Colors.black.withOpacity(0.6),
+      isScrollControlled: true,
+      builder: (context) {
+        return GlassCard(
+          borderRadius: 24,
+          height: 260,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Swipe/Drag Bar Indicator
+              Center(
+                child: Container(
+                  width: 45,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade600,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _routeName(locale),
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${tracking.stops.length} stops',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _StopSelector(
-            stops: tracking.stops,
-            selectedStopId: tracking.selectedStopId,
-            locale: locale,
-            onSelected: (stopId) async {
-              tracking.setSelectedStop(stopId);
-              await auth.updateSelectedStop(stopId);
-            },
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+              const SizedBox(height: 20),
+              
+              const Text(
+                '👤 User Profile Account Details',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 22),
+              
+              Row(
                 children: [
-                  Icon(
-                    tracking.nearestVehicle != null
-                        ? Icons.directions_bus
-                        : Icons.directions_bus_outlined,
-                    size: 40,
-                    color: tracking.nearestVehicle != null
-                        ? Colors.green
-                        : Colors.grey,
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppTheme.primaryAccentColor.withOpacity(0.15),
+                    child: const Icon(Iconsax.user, color: AppTheme.primaryAccentColor, size: 28),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Nearby Vehicle',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        Text(
-                          tracking.nearestVehicle != null
-                              ? '${tracking.liveLocations.length} active vehicle(s)'
-                              : 'No vehicles nearby',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _passengerName,
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _passengerEmail,
+                        style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                      ),
+                    ],
                   ),
-                  if (tracking.nearestVehicle != null)
-                    const Icon(Icons.gps_fixed, color: Colors.green),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Estimated Arrival Times',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              
+              const Spacer(),
+              
+              // Logout Action Trigger Button
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.1),
+                  foregroundColor: Colors.red,
+                  minimumSize: const Size(double.infinity, 46),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  side: const BorderSide(color: Colors.red, width: 0.5),
                 ),
-          ),
-          const SizedBox(height: 8),
-          if (tracking.etas.isEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Center(
-                  child: Text(
-                    'Waiting for active vehicles...',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ),
+                icon: const Icon(Iconsax.logout, size: 18),
+                label: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  if (mounted) Navigator.pop(context);
+                  // Auth state wrapper listens dynamically and routes back to login screen layout automatically
+                },
               ),
-            )
-          else
-            ...tracking.etas.map(
-              (eta) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: EtaCard(
-                  eta: eta,
-                  locale: locale,
-                  isSelected: eta.stop.id == tracking.selectedStopId,
-                ),
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  String _routeName(String locale) {
-    switch (locale) {
-      case 'si':
-        return RouteData.routeNameSi;
-      case 'ta':
-        return RouteData.routeNameTa;
-      default:
-        return RouteData.routeName;
-    }
-  }
-}
-
-class _StopSelector extends StatelessWidget {
-  final List<StopModel> stops;
-  final String? selectedStopId;
-  final String locale;
-  final ValueChanged<String> onSelected;
-
-  const _StopSelector({
-    required this.stops,
-    required this.selectedStopId,
-    required this.locale,
-    required this.onSelected,
-  });
-
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Select Your Stop',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. HEADER SECTION (Dynamic Name + Top Sheet Trigger Action)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '👋 Welcome Back',
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                   ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: selectedStopId,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.location_on),
-                hintText: 'Choose stop for notifications',
+                  Text(
+                    _passengerName, 
+                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              items: stops
-                  .map<DropdownMenuItem<String>>(
-                    (stop) => DropdownMenuItem(
-                      value: stop.id,
-                      child: Text(stop.localizedName(locale)),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Iconsax.notification, color: Colors.white),
+                    onPressed: () {},
+                  ),
+                  GestureDetector(
+                    onTap: _showUserProfileBottomSheet, // <-- Click top image avatar to pop profile details info sheet
+                    child: const CircleAvatar(
+                      radius: 20,
+                      backgroundColor: AppTheme.primaryAccentColor,
+                      child: Icon(Iconsax.user, color: Colors.white),
                     ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) onSelected(value);
-              },
+                  ),
+                ],
+              ),
+            ],
+          ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2, end: 0),
+
+          const SizedBox(height: 20),
+
+          // 2. LIVE ROUTE STATUS CARD
+          const Text(
+            'Route Status',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          ).animate().fadeIn(delay: 100.ms),
+          
+          const SizedBox(height: 10),
+          
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Route', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const SizedBox(height: 4),
+                const Text(
+                  'Kalpitiya – Kandakuliya',
+                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text('0 stops configured', style: TextStyle(color: AppTheme.primaryAccentColor.withOpacity(0.8), fontSize: 12)),
+              ],
             ),
-          ],
-        ),
+          ).animate().fadeIn(delay: 150.ms).scaleY(begin: 0.95, end: 1),
+
+          const SizedBox(height: 20),
+
+          // 3. SELECT YOUR STOP DROPDOWN
+          const Text(
+            'Select Your Stop',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          ).animate().fadeIn(delay: 200.ms),
+          
+          const SizedBox(height: 10),
+          
+          GlassCard(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedStop,
+                hint: Row(
+                  children: [
+                    const Icon(Iconsax.location5, color: AppTheme.primaryAccentColor, size: 20),
+                    const SizedBox(width: 10),
+                    Text('Choose stop for notifications', style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
+                  ],
+                ),
+                isExpanded: true,
+                dropdownColor: AppTheme.darkBackgroundColor,
+                items: _stops.map((String stop) {
+                  return DropdownMenuItem<String>(
+                    value: stop,
+                    child: Text(stop, style: const TextStyle(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedStop = newValue;
+                  });
+                },
+              ),
+            ),
+          ).animate().fadeIn(delay: 250.ms),
+
+          const SizedBox(height: 20),
+
+          // 4. NEARBY VEHICLE TRACKING PANEL
+          GlassCard(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Iconsax.bus5, color: Colors.red),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Nearby Vehicle', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                    Text('No vehicles nearby active zone', style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+                  ],
+                )
+              ],
+            ),
+          ).animate().fadeIn(delay: 300.ms).slideX(begin: -0.05, end: 0),
+
+          const SizedBox(height: 25),
+
+          // 5. ESTIMATED ARRIVAL TIMES LIST
+          const Text(
+            'Micro Track Summary',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          ).animate().fadeIn(delay: 350.ms),
+
+          const SizedBox(height: 10),
+
+          GlassCard(
+            height: 100,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Animate(
+                    effects: const [FadeEffect(), ScaleEffect()],
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                    child: Icon(Iconsax.radar5, color: AppTheme.secondaryGlowColor.withOpacity(0.7), size: 30),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Waiting for active vehicles...', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                ],
+              ),
+            ),
+          ).animate().fadeIn(delay: 400.ms),
+        ],
       ),
     );
   }

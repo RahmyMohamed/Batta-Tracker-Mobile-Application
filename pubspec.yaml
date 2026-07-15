@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_fonts: ^6.2.1
+  flutter_localizations:
+    sdk: flutter
   flutter_animate: ^4.5.0
   iconsax: ^0.0.8
   glassmorphism: ^3.0.0
@@ -23,7 +24,7 @@ dependencies:
   firebase_storage: ^12.3.7
 
   # Maps & Location
-  google_maps_flutter: ^2.10.0
+  google_maps_flutter: ^2.11.0
   geolocator: ^13.0.2
   geocoding: ^5.0.0
 

@@ -1,106 +1,90 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../../providers/auth_provider.dart';
-import '../../providers/tracking_provider.dart';
-import '../../widgets/emergency_fab.dart';
-import '../auth/login_screen.dart';
-import '../shared/settings_screen.dart';
-import 'passenger_dashboard_tab.dart';
-import 'passenger_map_tab.dart';
-import 'passenger_schedule_tab.dart';
-import 'passenger_vehicle_tab.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../theme/app_theme.dart';
+import 'passenger_dashboard_tab.dart'; // Unga old tabs imports
+import '../map_screen.dart';          // Namba create panna map screen
 
 class PassengerHomeScreen extends StatefulWidget {
-  const PassengerHomeScreen({super.key});
+  const PassengerHomeScreen({Key? key}) : super(key: key);
 
   @override
   State<PassengerHomeScreen> createState() => _PassengerHomeScreenState();
 }
 
 class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
-  int _currentIndex = 0;
+  int _selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initTracking());
-  }
-
-  Future<void> _initTracking() async {
-    final auth = context.read<AuthProvider>();
-    final tracking = context.read<TrackingProvider>();
-    await tracking.initializePassenger(
-      selectedStopId: auth.user?.selectedStopId,
-    );
-    if (auth.user?.selectedStopId != null) {
-      tracking.setSelectedStop(auth.user!.selectedStopId!);
-    }
-  }
+  // Unga dynamic tabs setup mapping
+  final List<Widget> _pages = [
+    const PassengerDashboardTab(), // Position 0: Main Dashboard UI
+    const MapScreen(),             // Position 1: Full tracking map
+    const Center(child: Text('Vehicles Screen')), 
+    const Center(child: Text('Notifications Screen')),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final tabs = [
-      const PassengerDashboardTab(),
-      const PassengerMapTab(),
-      const PassengerScheduleTab(),
-      const PassengerVehicleTab(),
-    ];
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Batta Tracker'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await context.read<AuthProvider>().logout();
-              if (!context.mounted) return;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
-            },
-          ),
-        ],
+      backgroundColor: AppTheme.darkBackgroundColor,
+      body: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: _pages,
+        ),
       ),
-      body: tabs[_currentIndex],
-      floatingActionButton: const EmergencyFab(),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) => setState(() => _currentIndex = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Home',
+      // Unga original navigation bar-ku badhala intha premium layout
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppTheme.darkBackgroundColor,
+          border: Border(
+            top: BorderSide(color: AppTheme.glassBorderColor.withOpacity(0.4), width: 1),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'Live Map',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.schedule_outlined),
-            selectedIcon: Icon(Icons.schedule),
-            label: 'Schedule',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.directions_bus_outlined),
-            selectedIcon: Icon(Icons.directions_bus),
-            label: 'Vehicle',
-          ),
-        ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildNavItem(0, Iconsax.home_15, Iconsax.home),
+            _buildNavItem(1, Iconsax.routing5, Iconsax.routing),
+            _buildNavItem(2, Iconsax.truck_fast, Iconsax.truck_fast),
+            _buildNavItem(3, Iconsax.notification5, Iconsax.notification),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData selectedIcon, IconData unselectedIcon) {
+    bool isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryAccentColor.withOpacity(0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primaryAccentColor.withOpacity(0.2),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  )
+                ]
+              : [],
+        ),
+        child: Icon(
+          isSelected ? selectedIcon : unselectedIcon,
+          color: isSelected ? AppTheme.primaryAccentColor : Colors.grey,
+          size: 26,
+        ),
+      ).animate(target: isSelected ? 1 : 0).scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 200.ms),
     );
   }
 }
