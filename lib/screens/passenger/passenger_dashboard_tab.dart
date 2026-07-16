@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart'; // <-- Firebase Auth import
 import '../../theme/app_theme.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/glass_card.dart';
+import '../auth/login_screen.dart';
 
 class PassengerDashboardTab extends StatefulWidget {
   const PassengerDashboardTab({Key? key}) : super(key: key);
@@ -19,7 +20,7 @@ class _PassengerDashboardTabState extends State<PassengerDashboardTab> {
   String _passengerEmail = "No Email Provided"; // Dynamic Email Fallback
 
   // Mock data for dropdown
-  final List<String> _stops = ['Kalpitiya Town', 'Kandakuliya Junction', 'Kudawa Beach'];
+  final List<String> _stops = ['Kalpitiya Town', 'Kurinjanpitiya Junction', 'Kandakuliya'];
 
   @override
   void initState() {
@@ -112,6 +113,11 @@ class _PassengerDashboardTabState extends State<PassengerDashboardTab> {
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
                   if (mounted) Navigator.pop(context);
+
+                  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                   MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    (Route<dynamic> route) => false, // This line drops all dashboard history states
+                  );
                   // Auth state wrapper listens dynamically and routes back to login screen layout automatically
                 },
               ),
@@ -183,7 +189,7 @@ class _PassengerDashboardTabState extends State<PassengerDashboardTab> {
                 const Text('Route', style: TextStyle(color: Colors.grey, fontSize: 12)),
                 const SizedBox(height: 4),
                 const Text(
-                  'Kalpitiya – Kandakuliya',
+                  'Kalpitiya – Kurinjanpitiya – Kandakuliya',
                   style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text('0 stops configured', style: TextStyle(color: AppTheme.primaryAccentColor.withOpacity(0.8), fontSize: 12)),
